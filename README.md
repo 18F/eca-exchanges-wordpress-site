@@ -9,27 +9,42 @@ This is an out-of-the-box implementation of Wordpress 4.0.  It's an example of h
 1. Clone the app (i.e. this repo).
 
   ```bash
-  git clone https://github.com/dmikusa-pivotal/cf-ex-worpress.git cf-ex-wordpress
+  git clone https://github.com/18F/cf-ex-wordpress.git cf-ex-wordpress
   cd cf-ex-wordpress
   ```
 
-1.  If you don't have one already, create a MySQL service.  With Pivotal Web Services, the following command will create a free MySQL database through [ClearDb].
+1. Create a service instance of a MySQL Database
+View Services  
+`cf marketplace`  
+View Specific Service Plans  
+Template: `cf marketplace -s SERVICE`  
+Example: `cf marketplace -s mysql56`  
+Create Service Instance  
+Template: `cf create-service SERVICE PLAN SERVICE_INSTANCE`  
+Example: `cf create-service mysql56 free mysql-service`  
 
-  ```bash
-  cf create-service cleardb spark my-test-mysql-db
-  ```
+2. Edit the manifest.yml file.  Change the 'host' attribute to something unique.  Then under "services:" change "mysql-service" to the name of your MySQL service.  This is the name of the service that will be bound to your application and thus used by Wordpress.
 
-1. Edit the manifest.yml file.  Change the 'host' attribute to something unique.  Then under "services:" change "mysql-db" to the name of your MySQL service.  This is the name of the service that will be bound to your application and thus used by Wordpress.
+3. Deploy the app with a no start command
+`cf push --no-start`
 
-1. Like every normal Wordpress install, edit `htdocs/wp-config.php` and change the [secret keys].  These should be uniqe for every installation.  You can generate these using the [WordPress.org secret-key service].
+4. Set environment variables for secret keys using [Wordpress Secret Key Generator](https://api.wordpress.org/secret-key/1.1/salt/)
+```bash
+cf set-env mywordpress-new AUTH_KEY YOUR_KEY
+cf set-env mywordpress-new SECURE_AUTH_KEY YOUR_KEY
+cf set-env mywordpress-new LOGGED_IN_KEY YOUR_KEY
+cf set-env mywordpress-new NONCE_KEY YOUR_KEY
+cf set-env mywordpress-new AUTH_SALT YOUR_KEY
+cf set-env mywordpress-new SECURE_AUTH_SALT YOUR_KEY
+cf set-env mywordpress-new LOGGED_IN_SALT YOUR_KEY
+cf set-env mywordpress-new NONCE_SALT YOUR_KEY
+```
 
-1. Push it to CloudFoundry.
+5. Push it to CloudFoundry.
 
-  ```bash
-  cf push
-  ```
-
-  Access your application URL in the browser.  You'll see the familiar Wordpress install screen.  Setup your password and your all set.
+```bash
+cf push
+```
 
 ### How It Works
 
@@ -42,7 +57,7 @@ When you push the application here's what happens.
 
 ### Persistent Storage
 
-If you've ever used Wordpress before, you're probably familiar with the way that you can install new themes and plugins through the WebUI.  This and other actions like uploading media files work by allowing the Wordpress application itself to modify files on your local disk.  Unfortunatley, this is going to cause [a problem](#caution) when you deploy to CloudFoundry.
+If you've ever used Wordpress before, you're probably familiar with the way that you can install new themes and plugins through the WebUI.  This and other actions like uploading media files work by allowing the Wordpress application itself to modify files on your local disk.  Unfortunately, this is going to cause [a problem](#caution) when you deploy to CloudFoundry.
 
 A naive approach to solving this problem is to simply bundle these files, themes, plugins and media, with your application.  That way when you `cf push`, the files will continue to exist.  There are multiple problems with this approach, like large and possibly slow uploads, tracking what's changed by actions in Wordpress and the fact that you probably don't want to push every time you need to upload media.  Given this, it's likely that for any serious installation of Wordpress you want a better solution.
 
@@ -106,23 +121,23 @@ These changes were made to prepare Wordpress to run on CloudFoundry.
 +
  // ** MySQL settings - You can get this info from your web host ** //
  /** The name of the database for WordPress */
--define('DB_NAME', 'database_name_here');
-+define('DB_NAME', $service['credentials']['name']);
+-'DB_NAME', 'database_name_here');
++'DB_NAME', $service['credentials']['name']);
 
  /** MySQL database username */
--define('DB_USER', 'username_here');
-+define('DB_USER', $service['credentials']['username']);
+-'DB_USER', 'username_here');
++'DB_USER', $service['credentials']['username']);
 
  /** MySQL database password */
--define('DB_PASSWORD', 'password_here');
-+define('DB_PASSWORD', $service['credentials']['password']);
+-'DB_PASSWORD', 'password_here');
++'DB_PASSWORD', $service['credentials']['password']);
 
  /** MySQL hostname */
--define('DB_HOST', 'localhost');
-+define('DB_HOST', $service['credentials']['hostname'] . ':' . $service['credentials']['port']);
+-'DB_HOST', 'localhost');
++'DB_HOST', $service['credentials']['hostname'] . ':' . $service['credentials']['port']);
 
  /** Database Charset to use in creating database tables. */
- define('DB_CHARSET', 'utf8');
+ 'DB_CHARSET', 'utf8');
 ```
 
 ### Caution
@@ -141,4 +156,3 @@ Please read the following before using Wordpress in production on CloudFoundry.
 [local storage on CloudFoundry]:http://docs.cloudfoundry.org/devguide/deploy-apps/prepare-to-deploy.html#filesystem
 [wp-content directory]:http://codex.wordpress.org/Determining_Plugin_and_Content_Directories
 [ephemeral file system]:http://docs.cloudfoundry.org/devguide/deploy-apps/prepare-to-deploy.html#filesystem
-
