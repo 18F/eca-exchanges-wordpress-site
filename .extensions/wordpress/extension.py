@@ -72,13 +72,13 @@ def install_wordpress(ctx, builder, wordpressDir):
               args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'plugin', 'install', '%s' % plugin['url'], '--activate']
         subprocess.call(args, cwd=wordpressDir)
     if setupjson.has_key('themes') and len(setupjson['themes']):
-        for plugin in setupjson['themes']:
-          if plugin.has_key('name') and plugin.has_key('version'):
-              args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'theme', 'install', '%s' % plugin['name'], '--version=%s' % plugin['version']]
-          elif plugin.has_key('name'):
-              args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'theme', 'install', '%s' % plugin['name']]
-          elif plugin.has_key('url'):
-              args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'theme', 'install', '%s' % plugin['url']]
+        for theme in setupjson['themes']:
+          if theme.has_key('name') and theme.has_key('version'):
+              args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'theme', 'install', '%s' % theme['name'], '--version=%s' % theme['version']]
+          elif theme.has_key('name'):
+              args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'theme', 'install', '%s' % theme['name']]
+          elif theme.has_key('url'):
+              args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'theme', 'install', '%s' % theme['url']]
         subprocess.call(args, cwd=wordpressDir)
 
 def compile(install):
