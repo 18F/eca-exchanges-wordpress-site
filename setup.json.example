@@ -9,6 +9,10 @@
     },
     "plugins": [
         {
+            "name": "amazon-web-services",
+            "version": "0.3.4"
+        },
+        {
             "name": "amazon-s3-and-cloudfront",
             "version": "0.9.10"
         }
