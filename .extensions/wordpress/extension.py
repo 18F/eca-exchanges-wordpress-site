@@ -3,6 +3,7 @@
 Downloads, installs and configures WordPress
 """
 import os
+import subprocess
 import json
 import os.path
 import logging
@@ -11,136 +12,91 @@ from build_pack_utils import utils
 
 _log = logging.getLogger('wordpress')
 
-
-DEFAULTS = utils.FormattedDict({
-    'WORDPRESS_VERSION': '4.1.1',  # or 'latest'
-    'WORDPRESS_PACKAGE': 'wordpress-{WORDPRESS_VERSION}.tar.gz',
-    'WORDPRESS_HASH': '258bda90f618d7af3a2db7f22fc926d1fedb06f4',
-    'WORDPRESS_URL': 'https://wordpress.org/{WORDPRESS_PACKAGE}',
-})
-
-
-def merge_defaults(ctx):
-    for key, val in DEFAULTS.iteritems():
-        if key not in ctx:
-            ctx[key] = val
-
-
-def is_sshfs_enabled(ctx):
-    return ('SSH_HOST' in ctx.keys() and
-            'SSH_KEY_NAME' in ctx.keys() and
-            'SSH_PATH' in ctx.keys())
-
-
-def process_ssh_opts(ctx):
-    if 'SSH_OPTS' in ctx.keys():
-        try:
-            opts = json.loads(ctx['SSH_OPTS'])
-            ctx['SSH_OPTS'] = ["-o %s" % opt for opt in opts]
-        except TypeError:
-            pass  # ignore failures to parse JSON
-
-
-def enable_sshfs(ctx):
-    cmds = []
-    if is_sshfs_enabled(ctx):
-        process_ssh_opts(ctx)
-        # look for ssh keys that were pushed with app, move out of public
-        #  directory and set proper permissions (cf push ruins permissions)
-        cmds.append(('mv', '$HOME/%s/.ssh' % ctx['WEBDIR'], '$HOME/'))
-        cmds.append(('chmod', '644', '$HOME/.ssh/*'))
-        cmds.append(('chmod', '600', '$HOME/.ssh/%s' % ctx['SSH_KEY_NAME']))
-        # save WP original files
-        cmds.append(('mv',
-                     '$HOME/%s/wp-content' % ctx['WEBDIR'],
-                     '/tmp/wp-content'))
-        # mount sshfs
-        cmds.append(('mkdir', '-p', '$HOME/%s/wp-content' % ctx['WEBDIR']))
-        cmd = ['sshfs',
-               "%s:%s" % (ctx['SSH_HOST'], ctx['SSH_PATH']),
-               '$HOME/%s/wp-content' % ctx['WEBDIR'],
-               '-o IdentityFile=$HOME/.ssh/%s' % ctx['SSH_KEY_NAME'],
-               '-o StrictHostKeyChecking=yes',
-               '-o UserKnownHostsFile=$HOME/.ssh/known_hosts',
-               '-o idmap=user']
-        cmd.extend(ctx['SSH_OPTS'])
-        cmds.append(cmd)
-        # copy files
-        cmds.append(('rsync', '-rtvu',
-                     '/tmp/wp-content', '$HOME/%s' % ctx['WEBDIR']))
-        # clean up
-        cmds.append(('rm', '-rf', '/tmp/wp-content'))
-        # we unmount because we want sshfs to be run as a proc
-        #  that way if it fails, it will cause the app to fail
-        cmds.append(('fusermount',
-                     '-u', '$HOME/%s/wp-content' % ctx['WEBDIR']))
-    return cmds
-
-
-def write_sshfs_warning(ctx):
-    warning_file = os.path.join(ctx['BUILD_DIR'],
-                                ctx['WEBDIR'],
-                                'wp-content',
-                                ' WARNING_DO_NOT_EDIT_THIS_DIRECTORY')
-    with open(warning_file, 'wt') as fp:
-        fp.write("!! WARNING !! DO NOT EDIT FILES IN THIS DIRECTORY!!")
-        fp.write("\n")
-        fp.write("These files are managed by a WordPress instance running "
-                 "on CloudFoundry.  Editing them directly may break things "
-                 " and changes may be overwritten the next time the "
-                 "application is staged on CloudFoundry.")
-        fp.write("\n")
-        fp.write("YOU HAVE BEEN WARNED!!")
+def load_json(wordpressDir):
+    with open(os.path.join(wordpressDir, 'setup.json')) as data_file:
+        data = json.load(data_file)
+    return data
 
 
 # Extension Methods
 def preprocess_commands(ctx):
-    return enable_sshfs(ctx)
+    return []
 
 
 def service_commands(ctx):
-    cmds = {}
-    if is_sshfs_enabled(ctx):
-        process_ssh_opts(ctx)
-        cmds['sshfs'] = ['sshfs', "%s:%s" % (ctx['SSH_HOST'], ctx['SSH_PATH']),
-                         '$HOME/%s/wp-content' % ctx['WEBDIR'], '-C', '-f',
-                         '-o IdentityFile=$HOME/.ssh/%s' % ctx['SSH_KEY_NAME'],
-                         '-o StrictHostKeyChecking=yes',
-                         '-o UserKnownHostsFile=$HOME/.ssh/known_hosts',
-                         '-o idmap=user']
-        cmds['sshfs'].extend(ctx['SSH_OPTS'])
-        _log.info("cmd to run `%s`", cmds['sshfs'])
-
-    return cmds
+    return {}
 
 
 def service_environment(ctx):
     return {}
 
+def install_wpcli(workDir):
+    print 'Installing wp-cli'
+    args = ['curl', '-O', 'https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar']
+    subprocess.call(args, cwd=workDir)
+    args = ['chmod', '+x', 'wp-cli.phar']
+    subprocess.call(args, cwd=workDir)
+
+def install_wordpress(ctx, builder, wordpressDir):
+    # rewrite a temp copy of php.ini for use by wp-cli
+    (builder
+        .copy()
+        .under('{BUILD_DIR}/php/etc')
+        .where_name_is('php.ini')
+        .into('TMPDIR')
+     .done())
+    utils.rewrite_cfgs(os.path.join(ctx['TMPDIR'], 'php.ini'),
+                       {'TMPDIR': ctx['TMPDIR'],
+                        'HOME': ctx['BUILD_DIR']},
+                       delim='@')
+    # get path to php config we just created
+    phpconfig = os.path.join(ctx['TMPDIR'], 'php.ini')
+    # get path to php binary
+    phpcmd = os.path.join(ctx['BUILD_DIR'], 'php', 'bin', 'php')
+    # set the library path so php can find it's extension
+    os.environ['LD_LIBRARY_PATH'] = os.path.join(ctx['BUILD_DIR'], 'php', 'lib')
+
+    print 'Installing WordPress'
+    setupjson = load_json(wordpressDir)
+    args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'core', 'download', '--version=%s' % setupjson['wordpress_version']]
+    subprocess.call(args, cwd=wordpressDir)
+    args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'core', 'install', '--url=%s' % setupjson['site_info']['url'], '--title=%s' % setupjson['site_info']['title'], '--admin_user=%s' % setupjson['site_info']['admin_user'], '--admin_password=%s' % setupjson['site_info']['admin_password'], '--admin_email=%s' % setupjson['site_info']['admin_email']]
+    subprocess.call(args, cwd=wordpressDir)
+    if setupjson.has_key('plugins') and len(setupjson['plugins']):
+        for plugin in setupjson['plugins']:
+          if plugin.has_key('name') and plugin.has_key('version'):
+              args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'plugin', 'install', '%s' % plugin['name'], '--version=%s' % plugin['version'], '--activate']
+          elif plugin.has_key('name'):
+              args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'plugin', 'install', '%s' % plugin['name'], '--activate']
+          elif plugin.has_key('url'):
+              args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'plugin', 'install', '%s' % plugin['url'], '--activate']
+        subprocess.call(args, cwd=wordpressDir)
+    if setupjson.has_key('themes') and len(setupjson['themes']):
+        for plugin in setupjson['themes']:
+          if plugin.has_key('name') and plugin.has_key('version'):
+              args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'theme', 'install', '%s' % plugin['name'], '--version=%s' % plugin['version']]
+          elif plugin.has_key('name'):
+              args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'theme', 'install', '%s' % plugin['name']]
+          elif plugin.has_key('url'):
+              args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'theme', 'install', '%s' % plugin['url']]
+        subprocess.call(args, cwd=wordpressDir)
 
 def compile(install):
-    ctx = install.builder._ctx
-    merge_defaults(ctx)
-    print 'Installing Wordpress %s' % ctx['WORDPRESS_VERSION']
-    inst = install._installer
+    builder = install.builder
+    ctx = builder._ctx
     workDir = os.path.join(ctx['TMPDIR'], 'wordpress')
-    inst.install_binary_direct(
-        ctx['WORDPRESS_URL'],
-        ctx['WORDPRESS_HASH'],
-        workDir,
-        fileName=ctx['WORDPRESS_PACKAGE'],
-        strip=True)
-    (install.builder
+    (builder
         .move()
         .everything()
         .under('{BUILD_DIR}/{WEBDIR}')
         .into(workDir)
         .done())
-    (install.builder
+    install_wpcli(workDir)
+    install_wordpress(ctx, builder, workDir)
+    (builder
         .move()
         .everything()
         .under(workDir)
         .into('{BUILD_DIR}/{WEBDIR}')
         .done())
-    write_sshfs_warning(ctx)
     return 0
