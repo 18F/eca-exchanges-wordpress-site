@@ -1,0 +1,26 @@
+{
+    "wordpress_version": "4.4",
+    "site_info": {
+        "url": "https://mysite.apps.cloud.gov",
+        "title": "My new site",
+        "admin_user": "admin",
+        "admin_password": "CHANGEME",
+        "admin_email": "my.email@example.com"
+    },
+    "plugins": [
+        {
+            "name": "amazon-web-services",
+            "version": "0.3.4"
+        },
+        {
+            "name": "amazon-s3-and-cloudfront",
+            "version": "0.9.10"
+        }
+    ],
+    "themes": [
+        {
+            "name": "create",
+            "version": "1.3"
+        }
+    ]
+}
