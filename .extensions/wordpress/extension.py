@@ -58,7 +58,10 @@ def install_wordpress(ctx, builder, wordpressDir):
 
     print 'Installing WordPress'
     setupjson = load_json(wordpressDir)
-    args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'core', 'download', '--version=%s' % setupjson['wordpress_version']]
+    if setupjson.has_key('wordpress_version'):
+        args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'core', 'download', '--version=%s' % setupjson['wordpress_version']]
+    else:
+        args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'core', 'download', '--version=latest']
     subprocess.call(args, cwd=wordpressDir)
     args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'core', 'install', '--url=%s' % setupjson['site_info']['url'], '--title=%s' % setupjson['site_info']['title'], '--admin_user=%s' % setupjson['site_info']['admin_user'], '--admin_password=%s' % setupjson['site_info']['admin_password'], '--admin_email=%s' % setupjson['site_info']['admin_email']]
     subprocess.call(args, cwd=wordpressDir)
