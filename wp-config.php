@@ -56,6 +56,15 @@ define('DB_COLLATE', '');
  define('NONCE_SALT', $_ENV['NONCE_SALT']);
 /**#@-*/
 
+/** S3 Access Keys **/
+ $s3service = $services['s3'][0]; // pick the first S3 service
+ define( 'AWS_ACCESS_KEY_ID', $s3service['credentials']['access_key_id'] );
+ define( 'AWS_SECRET_ACCESS_KEY', $s3service['credentials']['secret_access_key'] );
+ define( 'AS3CF_BUCKET', $s3service['credentials']['bucket'] );
+ define( 'AS3CF_ASSETS_BUCKET', $s3service['credentials']['bucket'] );
+
+ /** **/
+
 /**
  * WordPress Database Table prefix.
  *

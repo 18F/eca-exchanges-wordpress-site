@@ -8,3 +8,4 @@ applications:
   host: my-special-wordpress
   services:
   - mysql-db
+  - s3-storage

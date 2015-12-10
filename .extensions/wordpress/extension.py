@@ -70,7 +70,7 @@ def install_wordpress(ctx, builder, wordpressDir):
               args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'plugin', 'install', '%s' % plugin['name'], '--activate']
           elif plugin.has_key('url'):
               args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'plugin', 'install', '%s' % plugin['url'], '--activate']
-        subprocess.call(args, cwd=wordpressDir)
+          subprocess.call(args, cwd=wordpressDir)
     if setupjson.has_key('themes') and len(setupjson['themes']):
         for theme in setupjson['themes']:
           if theme.has_key('name') and theme.has_key('version'):
@@ -79,7 +79,7 @@ def install_wordpress(ctx, builder, wordpressDir):
               args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'theme', 'install', '%s' % theme['name']]
           elif theme.has_key('url'):
               args = [phpcmd, '-c', phpconfig, 'wp-cli.phar', 'theme', 'install', '%s' % theme['url']]
-        subprocess.call(args, cwd=wordpressDir)
+          subprocess.call(args, cwd=wordpressDir)
 
 def compile(install):
     builder = install.builder
