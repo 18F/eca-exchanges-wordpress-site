@@ -12,53 +12,53 @@ This is an out-of-the-box implementation of Wordpress.  It's an example of how c
   git clone https://github.com/18F/cf-ex-wordpress.git cf-ex-wordpress
   cd cf-ex-wordpress
   ```
-
 2. Create a service instance of a MySQL Database
-View Services
-`cf marketplace`
-View Specific Service Plans
-Template: `cf marketplace -s SERVICE`
-Example: `cf marketplace -s mysql56`
-Create Service Instance
-Template: `cf create-service SERVICE PLAN SERVICE_INSTANCE`
-Example: `cf create-service mysql56 free mysql-service`
+ * View Services
+    * `cf marketplace`
+ * View Specific Service Plans
+    * Template: `cf marketplace -s SERVICE`
+    * Example: `cf marketplace -s mysql56`
+ * Create Service Instance
+    * Template: `cf create-service SERVICE PLAN SERVICE_INSTANCE`
+    * Example: `cf create-service mysql56 free mysql-service`
 
 3. Create a service instance of S3 storage
-View Services
-`cf marketplace`
-View Specific Service Plans
-Template: `cf marketplace -s SERVICE`
-Example: `cf marketplace -s s3`
-Create Service Instance
-Template: `cf create-service SERVICE PLAN SERVICE_INSTANCE`
-Example: `cf create-service s3 basic s3-service`
+  * View Services
+     * `cf marketplace`
+  * View Specific Service Plans
+     * Template: `cf marketplace -s SERVICE`
+     * Example: `cf marketplace -s s3`
+  * Create Service Instance
+     * Template: `cf create-service SERVICE PLAN SERVICE_INSTANCE`
+     * Example: `cf create-service s3 basic s3-service`
 
 4. Copy the example `manifest.yml.example` to `manifest.yml`. Edit the `manifest.yml` file.  Change the 'host' attribute to something unique.  Then under "services:" change "mysql-service" to the name of your MySQL service.  This is the name of the service that will be bound to your application and thus used by Wordpress.
 
 5. Copy the example `setup.json.example` to `setup.json`. Edit the `setup.json` file for your specific WordPress site information, plugins you want installed, and themes.
-**NOTE** The example includes a set of plugins that will be used to attach to your previously created S3 storage so you can store media uploads, like pictures, for your WordPress site. If you do not use these plugins, every time you deploy, it will destroy your uploaded files.
-
-See: [Setup JSON](#setup-json) for more information about the format of this file
+  * **NOTE** The example includes a set of plugins that will be used to attach to your previously created S3 storage so you can store media uploads, like pictures, for your WordPress site. If you do not use these plugins, every time you deploy, it will destroy your uploaded files. 
+  * See: [Setup JSON](#setup-json) for more information about the format of this file
 
 6. Deploy the app with a no start command
 `cf push --no-start`
 
 7. Set environment variables for secret keys using [Wordpress Secret Key Generator](https://api.wordpress.org/secret-key/1.1/salt/)
-```bash
-cf set-env mywordpress-new AUTH_KEY YOUR_KEY
-cf set-env mywordpress-new SECURE_AUTH_KEY YOUR_KEY
-cf set-env mywordpress-new LOGGED_IN_KEY YOUR_KEY
-cf set-env mywordpress-new NONCE_KEY YOUR_KEY
-cf set-env mywordpress-new AUTH_SALT YOUR_KEY
-cf set-env mywordpress-new SECURE_AUTH_SALT YOUR_KEY
-cf set-env mywordpress-new LOGGED_IN_SALT YOUR_KEY
-cf set-env mywordpress-new NONCE_SALT YOUR_KEY
-```
+
+  ```bash
+  cf set-env mywordpress-new AUTH_KEY YOUR_KEY
+  cf set-env mywordpress-new SECURE_AUTH_KEY YOUR_KEY
+  cf set-env mywordpress-new LOGGED_IN_KEY YOUR_KEY
+  cf set-env mywordpress-new NONCE_KEY YOUR_KEY
+  cf set-env mywordpress-new AUTH_SALT YOUR_KEY
+  cf set-env mywordpress-new SECURE_AUTH_SALT YOUR_KEY
+  cf set-env mywordpress-new LOGGED_IN_SALT YOUR_KEY
+  cf set-env mywordpress-new NONCE_SALT YOUR_KEY
+  ```
 
 8. Push it to CloudFoundry.
-```bash
-cf push
-```
+
+  ```bash
+  cf push
+  ```
 
 9. Configure S3 WordPress Plugin
  1. Login to https://your-site.apps.cloud.gov/wp-admin
