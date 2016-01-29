@@ -16,11 +16,11 @@
 
 // ** Read MySQL service properties from _ENV['VCAP_SERVICES']
 $services = json_decode($_ENV['VCAP_SERVICES'], true);
-$service = $services['mysql56'][0];  // pick the first MySQL service
+$service = $services['aws-rds'][0];  // pick the first MySQL service
 
 // ** MySQL settings - You can get this info from your web host ** //
 /** The name of the database for WordPress */
-define('DB_NAME', $service['credentials']['dbname']);
+define('DB_NAME', $service['credentials']['db_name']);
 
 /** MySQL database username */
 define('DB_USER', $service['credentials']['username']);
@@ -29,7 +29,7 @@ define('DB_USER', $service['credentials']['username']);
 define('DB_PASSWORD', $service['credentials']['password']);
 
 /** MySQL hostname */
-define('DB_HOST', $service['credentials']['hostname'] . ':' . $service['credentials']['port']);
+define('DB_HOST', $service['credentials']['host'] . ':' . $service['credentials']['port']);
 
 /** Database Charset to use in creating database tables. */
 define('DB_CHARSET', 'utf8');
