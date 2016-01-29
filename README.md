@@ -20,7 +20,7 @@ This is an out-of-the-box implementation of Wordpress.  It's an example of how c
     * Example: `cf marketplace -s aws-rds`
  * Create Service Instance
     * Template: `cf create-service SERVICE PLAN SERVICE_INSTANCE`
-    * Example: `cf create-service aws-rds shared-psql mysql-service`
+    * Example: `cf create-service aws-rds shared-mysql mysql-service`
 
 3. Create a service instance of S3 storage
   * View Services
