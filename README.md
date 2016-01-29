@@ -22,7 +22,7 @@ This is an out-of-the-box implementation of Wordpress.  It's an example of how c
     * Template: `cf create-service SERVICE PLAN SERVICE_INSTANCE`
     * Example: `cf create-service aws-rds shared-mysql mysql-service`
 
-3. Create a service instance of S3 storage
+3. Create a service instance of S3 storage. NB: A demo account will not be permitted to use the S3 service, so you can skip this for a basic demo.
   * View Services
      * `cf marketplace`
   * View Specific Service Plans
@@ -35,8 +35,8 @@ This is an out-of-the-box implementation of Wordpress.  It's an example of how c
 4. Copy the example `manifest.yml.example` to `manifest.yml`. Edit the `manifest.yml` file.
   * Change the 'host' attribute to something unique for your site.
   * Under "services:" change
-    * "mysql-db" to the name of your MySQL service you created in Step 2.
-    * "s3-storage" to the name of your S3 service you created in Step 3.
+    * "mysql-service" to the name of your MySQL service you created in Step 2.
+    * "s3-storage" to the name of your S3 service you created in Step 3. Or delete this line if you're not using S3.
 
 5. Copy the example `setup.json.example` to `setup.json`. Edit the `setup.json` file for your specific WordPress site information, plugins you want installed, and themes.
   * **NOTE** The example includes a set of plugins that will be used to attach to your previously created S3 storage so you can store media uploads, like pictures, for your WordPress site. If you do not use these plugins, every time you deploy, it will destroy your uploaded files. 
@@ -45,7 +45,9 @@ This is an out-of-the-box implementation of Wordpress.  It's an example of how c
 6. Deploy the app with a no start command
 `cf push --no-start`
 
-7. Set environment variables for secret keys using [Wordpress Secret Key Generator](https://api.wordpress.org/secret-key/1.1/salt/)
+7. Set environment variables for secret keys using [Wordpress Secret Key Generator](https://api.wordpress.org/secret-key/1.1/salt/).
+
+You will likely need to remove "bad" characters that break bash environment variable parsing: '`' (backtick), ' ', (space), and ';' (semicolon).
 
   ```bash
   cf set-env mywordpress-new AUTH_KEY YOUR_KEY
