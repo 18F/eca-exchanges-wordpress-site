@@ -17,7 +17,7 @@ This is an out-of-the-box implementation of Wordpress.  It's an example of how c
     * `cf marketplace`
  * View Specific Service Plans
     * Template: `cf marketplace -s SERVICE`
-    * Example: `cf marketplace -s mysql56`
+    * Example: `cf marketplace -s aws-rds`
  * Create Service Instance
     * Template: `cf create-service SERVICE PLAN SERVICE_INSTANCE`
     * Example: `cf create-service aws-rds shared-psql mysql-service`
