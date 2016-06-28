@@ -184,7 +184,7 @@ Please read the following before using Wordpress in production on CloudFoundry.
 
 ### License
 
-This project is licensed under the Apache v2 license.
+See [LICENSE](LICENSE.md) for license details.
 
 
 [PHP Build Pack]:https://github.com/dmikusa-pivotal/cf-php-build-pack

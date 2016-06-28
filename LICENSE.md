@@ -1,3 +1,14 @@
+This repository is a fork of https://github.com/dmikusa-pivotal/cf-ex-wordpress
+
+## License for modifications in 18F's fork
+
+As a work of the United States Government, these modifications are in the
+public domain within the United States.
+
+Additionally, we waive copyright and related rights in these modifications
+worldwide through the [CC0 1.0 Universal public domain dedication](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## License of project this fork is based on
 
                                  Apache License
                            Version 2.0, January 2004
