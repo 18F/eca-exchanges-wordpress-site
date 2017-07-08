@@ -1,7 +1,7 @@
 {
     "wordpress_version": "4.4",
     "site_info": {
-        "url": "https://mysite.apps.cloud.gov",
+        "url": "https://mysite.app.cloud.gov",
         "title": "My new site",
         "admin_user": "admin",
         "admin_password": "CHANGEME",
