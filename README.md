@@ -50,14 +50,14 @@ This is an out-of-the-box implementation of Wordpress.  It's an example of how c
 You will likely need to remove "bad" characters that break bash environment variable parsing: '`' (backtick), ' ', (space), and ';' (semicolon).
 
   ```bash
-  cf set-env mywordpress-new AUTH_KEY YOUR_KEY
-  cf set-env mywordpress-new SECURE_AUTH_KEY YOUR_KEY
-  cf set-env mywordpress-new LOGGED_IN_KEY YOUR_KEY
-  cf set-env mywordpress-new NONCE_KEY YOUR_KEY
-  cf set-env mywordpress-new AUTH_SALT YOUR_KEY
-  cf set-env mywordpress-new SECURE_AUTH_SALT YOUR_KEY
-  cf set-env mywordpress-new LOGGED_IN_SALT YOUR_KEY
-  cf set-env mywordpress-new NONCE_SALT YOUR_KEY
+  cf set-env mywordpress AUTH_KEY YOUR_KEY
+  cf set-env mywordpress SECURE_AUTH_KEY YOUR_KEY
+  cf set-env mywordpress LOGGED_IN_KEY YOUR_KEY
+  cf set-env mywordpress NONCE_KEY YOUR_KEY
+  cf set-env mywordpress AUTH_SALT YOUR_KEY
+  cf set-env mywordpress SECURE_AUTH_SALT YOUR_KEY
+  cf set-env mywordpress LOGGED_IN_SALT YOUR_KEY
+  cf set-env mywordpress NONCE_SALT YOUR_KEY
   ```
 
 8. Push it to CloudFoundry.
@@ -67,18 +67,18 @@ You will likely need to remove "bad" characters that break bash environment vari
   ```
 
 9. Configure S3 WordPress Plugin
- 1. Login to https://your-site.apps.cloud.gov/wp-admin
- 2. Click on AWS in the left navigation menu
- 3. Click on S3 and CloudFront in navigation menu
- 4. Turn on `Copy Files to S3` and `Rewrite File URLs`
- 5. Scroll to the bottom, and click Save Changes
+ * Login to https://mysite.app.cloud.gov/wp-admin
+ * Click on AWS in the left navigation menu
+ * Click on S3 and CloudFront in navigation menu
+ * Turn on `Copy Files to S3` and `Rewrite File URLs`
+ * Scroll to the bottom, and click Save Changes
 
 ### Setup JSON
 The only required section is `site_info`
 ```json
 {
   "site_info": {
-    "url": "https://mysite.apps.cloud.gov",
+    "url": "https://mysite.app.cloud.gov",
     "title": "My new site",
     "admin_user": "admin",
     "admin_password": "CHANGEME",
@@ -100,7 +100,7 @@ Plugins and themes are configured in the same way. You can provide either:
 {
   "wordpress_version": "4.4",
   "site_info": {
-    "url": "https://mysite.apps.cloud.gov",
+    "url": "https://mysite.app.cloud.gov",
     "title": "My new site",
     "admin_user": "admin",
     "admin_password": "CHANGEME",
@@ -187,10 +187,10 @@ Please read the following before using Wordpress in production on CloudFoundry.
 See [LICENSE](LICENSE.md) for license details.
 
 
-[PHP Build Pack]:https://github.com/dmikusa-pivotal/cf-php-build-pack
-[secret keys]:https://github.com/dmikusa-pivotal/cf-ex-worpress/blob/master/wp-config.php#L49
+[PHP Build Pack]:https://github.com/cloudfoundry/php-buildpack
+[secret keys]:https://github.com/cloudfoundry-samples/cf-ex-wordpress/blob/master/wp-config.php#L49
 [WordPress.org secret-key service]:https://api.wordpress.org/secret-key/1.1/salt
 [ClearDb]:https://www.cleardb.com/
-[local storage on CloudFoundry]:http://docs.cloudfoundry.org/devguide/deploy-apps/prepare-to-deploy.html#filesystem
+[local storage on CloudFoundry]:https://docs.cloudfoundry.org/devguide/deploy-apps/prepare-to-deploy.html#filesystem
 [wp-content directory]:http://codex.wordpress.org/Determining_Plugin_and_Content_Directories
 [ephemeral file system]:http://docs.cloudfoundry.org/devguide/deploy-apps/prepare-to-deploy.html#filesystem
