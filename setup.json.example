@@ -8,12 +8,14 @@
     },
     "plugins": [
         {
-            "name": "amazon-web-services",
-            "version": "0.3.4"
+          "url": "https://github.com/humanmade/S3-Uploads/archive/v1.1.0.zip"
         },
         {
-            "name": "amazon-s3-and-cloudfront",
-            "version": "0.9.10"
+          "name": "akismet",
+          "version": "4.0"
+        },
+        {
+          "name": "hello-dolly"
         }
     ],
     "themes": [

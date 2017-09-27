@@ -4,9 +4,15 @@ This is an example application which can be run on Cloud.gov using the CloudFoun
 
 This is an out-of-the-box implementation of WordPress.  It's an example of how common PHP applications can easily be run on Cloud.gov
 
-### Usage
+1. [Installation](#installation)
+1. [Administering your WordPress site](#administering-you-wordpress-site)
+1. [Full example setup.json file][#full-example-setup-json-file]
+1. [Recommendations](#recommendations)
 
-1. Clone the app (i.e. this repo).
+
+### Installation
+
+1. Clone this repo.
 
   ```bash
   git clone https://github.com/18F/cf-ex-wordpress.git cf-ex-wordpress
@@ -22,7 +28,10 @@ This is an out-of-the-box implementation of WordPress.  It's an example of how c
     * Template: `cf create-service SERVICE PLAN SERVICE_INSTANCE`
     * Example: `cf create-service aws-rds shared-mysql mysql-service`
 
-3. Create a service instance of S3 storage. NB: A demo account will not be permitted to use the S3 service, so you can skip this for a basic demo.
+3. Create a service instance of S3 storage.
+
+cloud.gov does not have persistent local storage so you'll need to rely on S3 for storing any files uploaded to WordPress. Sandbox accounts cannot create S3 storage services, consider upgrading to a prototyping package if you need to do this.
+
   * View Services
      * `cf marketplace`
   * View Specific Service Plans
@@ -30,20 +39,22 @@ This is an out-of-the-box implementation of WordPress.  It's an example of how c
      * Example: `cf marketplace -s s3`
   * Create Service Instance
      * Template: `cf create-service SERVICE PLAN SERVICE_INSTANCE`
-     * Example: `cf create-service s3 basic s3-service`
+     * Example: `cf create-service s3 basic-public s3-service`
 
 4. Copy the example `manifest.yml.example` to `manifest.yml`. Edit the `manifest.yml` file.
   * Change the 'name' and 'host' attributes to something unique for your site.
   * Under "services:" change
     * "mysql-service" to the name of your MySQL service you created in Step 2.
     * "s3-storage" to the name of your S3 service you created in Step 3. Or delete this line if you're not using S3.
+  * The memory and disk allocations in the example `manifest.yml` file should be [sufficient for WordPress](https://codex.wordpress.org/Editing_wp-config.php#Increasing_memory_allocated_to_PHP) but may need to be adjusted depending on your specific needs.
 
 5. Copy the example `setup.json.example` to `setup.json`. Edit the `setup.json` file for your specific WordPress site information, plugins you want installed, and themes.
   * **NOTE** The example includes a set of plugins that will be used to attach to your previously created S3 storage so you can store media uploads, like pictures, for your WordPress site. If you do not use these plugins, every time you deploy, it will destroy your uploaded files.
   * See: [Setup JSON](#setup-json) for more information about the format of this file
 
-6. Deploy the app with a no start command
-`cf push --no-start`
+6. Deploy the app with a no start command with`cf push --no-start`
+
+This will download and install WordPress, your MySQL database, and all plugins but will not start the application on cloud.gov.
 
 7. Set environment variables for secret keys using [WordPress Secret Key Generator](https://api.wordpress.org/secret-key/1.1/salt/).
 
@@ -62,19 +73,65 @@ Make sure to include the leading and closing `'` characters to avoid errors esca
 
 8. Push it to CloudFoundry.
 
+Run:
+
   ```bash
   cf push
   ```
 
-9. Configure S3 WordPress Plugin
- * Login to https://mysite.app.cloud.gov/wp-admin
- * Click on AWS in the left navigation menu
- * Click on S3 and CloudFront in navigation menu
- * Turn on `Copy Files to S3` and `Rewrite File URLs`
- * Scroll to the bottom, and click Save Changes
+This will push the files in this repository to the platform (around 25k), including the buildpack extension we've adapted from the Cloud Foundry project. The server downloads and runs the [PHP Build Pack] which installs HTTPD and PHP. The buildpack sees the extension which installs [wpcli](http://wp-cli.org/), reads your `setup.json`, and installs and configures WordPress along with any plugins or themes you have defined. It then copies the `wp-config.php` file and replaces the default WordPress files with it. Once all that is finished, the platform starts the droplet and you have a WordPress site.
 
-### Setup JSON
-The only required section is `site_info`
+You should see output like this in your terminal:
+
+  ```
+  App started
+
+
+  OK
+
+  App mywordpress was started using this command `$HOME/.bp/bin/start`
+
+  Showing health and status for app mywordpress in org sandbox-gsa / space gregory.boone as gregory.boone@gsa.gov...
+  OK
+
+  requested state: started
+  instances: 1/1
+  usage: 128M x 1 instances
+  urls: my-special-wordpress.app.cloud.gov
+  last uploaded: Tue Sep 26 22:21:49 UTC 2017
+  stack: cflinuxfs2
+  buildpack: https://github.com/cloudfoundry/php-buildpack
+  ```
+
+If you go to the URL listed under `urls` you should see a fresh WordPress site.
+
+
+9. Verify S3 connection
+
+This demo uses the [Human Made S3 Uploads plugin](https://github.com/humanmade/S3-Uploads), which automatically uploads files from your WordPress install to S3 and rewrites the URLs for you. The app has no configuration, the access keys, secret key, and bucket name are stored in the environment configuration and read by the plugin on start.
+
+```
+cf run-task gb-learns-cloud "php/bin/php htdocs/wp-cli.phar s3-uploads verify --path='/home/vcap/app/htdocs/'"
+```
+
+To see that the task ran, run `cf logs APP_NAME --recent` and you should see a line that says
+
+```
+OUT Success: Looks like your configuration is correct.
+```
+
+10. Log in and create a test post with media
+
+To test everything is correct, log in to your WordPress site with the credentials in your `setup.json` file. You should be able to do any admin activities including creating a new post and add an uploaded media file to it.
+
+### Administering your WordPress site
+
+This example app uses `wp-cli` to install and configure WordPress based on the data in your `setup.json` file. If you want to further customize your installation you can edit the `.extensions/wordpress/extension.py` file in this repo or use continuous integration to run more `wp-cli` commands after the basic installer runs.
+
+#### Basic site options
+
+The `site_info` section of the `setup.json` file is required and supplies basic information the Cloud Foundry process needs to set up your WordPress site. It looks like this by default:
+
 ```json
 {
   "site_info": {
@@ -86,16 +143,89 @@ The only required section is `site_info`
   }
 }
 ```
-This section is used to setup your WordPress site for the first time. You can change most of these settings with the WordPress admin once you have logged in after setup.
 
-You can define a specific version of WordPress that you would like to use by adding `"wordpress_version": VERSION_NUMBER` on line above the "site_info" section. If you don't add this line, cloud.gov will use the latest release of WordPress.
+Make sure you change these values, especially `url` and `title` to something specific to your app. At this time, these are the only options managed by the build process.
 
-Plugins and themes are configured in the same way. You can provide either:
- * `name` and specific `version`
- * `name` only and latest version will be used
- * `url` only (if you want to add a plugin from GitHub that's not in the Plugin repository)
+#### Updating WordPress
 
-#### Full Example
+By default, this package will install the latest version of WordPress. To update, run `cf restage APP_NAME`. cloud.gov will install a fresh copy of WordPress Core each time you `push` or `restage` so we **do not recommend** using the admin interface to manage updates to your site.
+
+If you want to pin your Core installation to a specific version of WordPress that you can. Add `"wordpress_version": VERSION_NUMBER` on line above the `site_info` section.
+
+```json
+{
+  "wordpress_version": "4.8.2",
+  "site_info": {
+  }
+}
+```
+
+**Note: We recommend running the latest stable version of WordPress on production sites.** The latest version typically contains important security updates. If you pin the WordPress version, you will need to manually increment this value to upgrade your install. Make sure you follow [the update schedule on wordpress.org](https://wordpress.org/news/category/releases/) to keep up with important security and maintenance releases.
+
+#### Themes and plugins
+
+The Cloud Foundry platform builds apps with ephemeral local storage. This means any changes made to local files on your app will get deleted whenever you `push` or `restage` the app. Make sure your plugins and themes remain installed by installing them through the `plugins` and `themes` sections of the `setup.json` file.
+
+For plugins or themes you'd normally be able to install from the admin interface, you can list them by name and the version that you want installed. For anything not available through WordPress directly, provide a URL to a ZIP file. For example, if your site's theme is one you've developed custom, you can host it on GitHub and use the "Download ZIP" link to install it.
+
+```json
+"plugins": [
+    {
+      "url": "https://github.com/humanmade/S3-Uploads/archive/v1.1.0.zip"
+    },
+    {
+      "name": "akismet",
+      "version": "4.0"
+    },
+    {
+      "name": "hello-dolly"
+    }
+],
+"themes": [
+    {
+        "name": "create",
+        "version": "1.3"
+    }
+  ]
+```
+
+In the sample `setup.json` file you see three plugins installed by default. One from GitHub and two from WordPress, one of which is pinned to a specfic version. As with WordPress Core, if you pin the version, make sure to watch for and install updates that contain security fixes.
+
+#### Running WP-CLI commands
+
+We recommend using Cloud Foundry's "tasks" to run `wp-cli` commands. To do this, make sure to give the full path for both PHP and the `wp-cli.phar` file and specify the WordPress path relative to the `app` directory. Here's how you'd run `wp core version` on your cloud.gov container:
+
+```bash
+cf run-task APP_NAME "php/bin/php htdocs/wp-cli.phar core version --path='htdocs/'"
+```
+
+That should print something like:
+
+```
+Creating task for app APP_NAME in org ORG_NAME / space SPACE_NAME as USER_NAME...
+OK
+
+Task has been submitted successfully for execution.
+task name:   98680974
+task id:     30
+```
+
+Run `cf logs APP_NAME --recent` to see the results and look for the `task name` to see the results. The task will create a container, run your command and then destroy the container after the task exits.
+
+```
+2017-09-27T10:54:44.36-0600 [APP/TASK/98680974/0] OUT Creating container
+2017-09-27T10:54:44.81-0600 [APP/TASK/98680974/0] OUT Successfully created container
+2017-09-27T10:54:51.50-0600 [APP/TASK/98680974/0] OUT 4.8.2
+2017-09-27T10:54:51.52-0600 [APP/TASK/98680974/0] OUT Stopping instance 13abb9c4-23fe-4fc6-8b72-dc6676be26b8
+2017-09-27T10:54:51.51-0600 [APP/TASK/98680974/0] OUT Exit status 0
+2017-09-27T10:54:51.52-0600 [APP/TASK/98680974/0] OUT Destroying container
+2017-09-27T10:54:52.92-0600 [APP/TASK/98680974/0] OUT Successfully destroyed container
+```
+
+Consider using continuous integration to run any tasks that should be run every time you `push` or `restage` your app.
+
+
+### Full example setup.json file
 ```json
 {
   "wordpress_version": "4.4",
@@ -108,11 +238,8 @@ Plugins and themes are configured in the same way. You can provide either:
   },
   "plugins": [
     {
-      "name": "amazon-web-services",
-      "version": "0.3.4"
-    },
-    {
-      "name": "amazon-s3-and-cloudfront"
+      "name": "akismet",
+      "version": "4.0"
     },
     {
       "url": "https://example.org/my-great-plugin-0.1.zip"
@@ -127,60 +254,10 @@ Plugins and themes are configured in the same way. You can provide either:
 }
 ```
 
-### How It Works
+### Recommendations
 
-When you push the application here's what happens.
-
-1. The local bits are pushed to your target.  This is small, five files around 25k. It includes the changes we made and a build pack extension for WordPress.
-1. The server downloads the [PHP Build Pack] and runs it.  This installs HTTPD and PHP.
-1. The build pack sees the extension that we pushed and runs it.  The extension installs [wpcli](http://wp-cli.org/), and then reads your `setup.json` to install WordPress, and any plugins or themes you have defined. It then copies the rest of the files that we pushed and replaces the default WordPress files with them.  In this case, it's just the `wp-config.php` file.
-1. At this point, the build pack is done and CF runs our droplet.
-
-### Changes
-
-These changes were made to prepare WordPress to run on CloudFoundry.
-
-1. Edit `wp-config.php`, configure to use CloudFoundry database.
-
-```diff
---- wp-config-sample.php	2013-10-24 18:58:23.000000000 -0400
-+++ wp-config.php	2014-03-05 15:44:23.000000000 -0500
-@@ -14,18 +14,22 @@
-  * @package WordPress
-  */
-
-+// ** Read MySQL service properties from _ENV['VCAP_SERVICES']
-+$services = json_decode($_ENV['VCAP_SERVICES'], true);
-+$service = $services['cleardb'][0];  // pick the first MySQL service
-+
- // ** MySQL settings - You can get this info from your web host ** //
- /** The name of the database for WordPress */
--'DB_NAME', 'database_name_here');
-+'DB_NAME', $service['credentials']['dbname']);
-
- /** MySQL database username */
--'DB_USER', 'username_here');
-+'DB_USER', $service['credentials']['username']);
-
- /** MySQL database password */
--'DB_PASSWORD', 'password_here');
-+'DB_PASSWORD', $service['credentials']['password']);
-
- /** MySQL hostname */
--'DB_HOST', 'localhost');
-+'DB_HOST', $service['credentials']['hostname'] . ':' . $service['credentials']['port']);
-
- /** Database Charset to use in creating database tables. */
- 'DB_CHARSET', 'utf8');
-```
-
-### Caution
-
-Please read the following before using WordPress in production on CloudFoundry.
-
-1. WordPress is designed to write to the local file system.  This does not work well with CloudFoundry, as an application's [local storage on CloudFoundry] is ephemeral.  In other words, WordPress will write things to the local disk and they will eventually disappear. Using S3 for media upload storage is the recommended way to rectify this at this time. Also, keep in mind, that if you install themes or plugins via the WordPress admin and you have not included them in your `setup.json`, the next time you push, these plugins or themes will be removed.
-
-1. This is not an issue with WordPress specifically, but PHP stores session information to the local disk.  As mentioned previously, the local disk for an application on CloudFoundry is ephemeral, so it is possible for you to lose session and session data.  If you need reliable session storage, look at storing session data in an SQL database or with a NoSQL service.
+1. You will probably want to connect your app to some kind of SMTP service to send transactional emails like password resets. By default cloud.gov apps cannot send email.
+1. The S3 Uploads plugin rewrites the URLs used by WordPress but does not flush the rewrite rules table automatically. To get around this, you can run a task to flush the rewrite rules after every `cf push` of your app. You can also automate those tasks by integrating continuous integration into your app.
 
 ### License
 
