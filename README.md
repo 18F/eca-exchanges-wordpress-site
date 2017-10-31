@@ -6,7 +6,7 @@ This is an out-of-the-box implementation of WordPress. It's an example of how co
 
 1. [Installation](#installation)
 1. [Administering your WordPress site](#administering-you-wordpress-site)
-1. [Full example setup.json file][#full-example-setup-json-file]
+1. [Full example setup.json file](#full-example-setupjson-file)
 1. [Recommendations](#recommendations)
 
 
