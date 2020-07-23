@@ -2,7 +2,7 @@
 applications:
 - name: mywordpress
   memory: 128M
-  disk_quota: 250M
+  disk_quota: 512M
   path: .
   buildpack: php_buildpack
   host: my-special-wordpress

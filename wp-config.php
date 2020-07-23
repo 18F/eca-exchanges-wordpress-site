@@ -18,6 +18,8 @@
 $services = json_decode($_ENV['VCAP_SERVICES'], true);
 $service = $services['aws-rds'][0];  // pick the first MySQL service
 
+define('WP_USE_EXT_MYSQL', false);
+
 // ** MySQL settings - You can get this info from your web host ** //
 /** The name of the database for WordPress */
 define('DB_NAME', $service['credentials']['db_name']);

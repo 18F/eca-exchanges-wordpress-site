@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cf set-env cg-wordpress-demo AUTH_KEY YOUR-KEY
+cf set-env cg-wordpress-demo SECURE_AUTH_KEY YOUR-KEY
+cf set-env cg-wordpress-demo LOGGED_IN_KEY YOUR-KEY
+cf set-env cg-wordpress-demo NONCE_KEY YOUR-KEY
+cf set-env cg-wordpress-demo AUTH_SALT YOUR-KEY
+cf set-env cg-wordpress-demo SECURE_AUTH_SALT YOUR-KEY
+cf set-env cg-wordpress-demo LOGGED_IN_SALT YOUR-KEY
+cf set-env cg-wordpress-demo NONCE_SALT YOUR-KEY
