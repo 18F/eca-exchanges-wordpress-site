@@ -2,3 +2,5 @@
 .ssh
 test.lp
 setup.json
+setup.sh
+manifest.yml

@@ -56,20 +56,7 @@ cloud.gov does not have persistent local storage so you'll need to rely on S3 fo
 
 This will download and install WordPress, configure it to use your MySQL service, and install all your plugins and themes but will not start the application on cloud.gov.
 
-7. Set environment variables for secret keys using [WordPress Secret Key Generator](https://api.wordpress.org/secret-key/1.1/salt/).
-
-Make sure to include the leading and closing `'` characters to avoid errors escaping special characters.
-
-  ```bash
-  cf set-env mywordpress AUTH_KEY YOUR_KEY
-  cf set-env mywordpress SECURE_AUTH_KEY YOUR_KEY
-  cf set-env mywordpress LOGGED_IN_KEY YOUR_KEY
-  cf set-env mywordpress NONCE_KEY YOUR_KEY
-  cf set-env mywordpress AUTH_SALT YOUR_KEY
-  cf set-env mywordpress SECURE_AUTH_SALT YOUR_KEY
-  cf set-env mywordpress LOGGED_IN_SALT YOUR_KEY
-  cf set-env mywordpress NONCE_SALT YOUR_KEY
-  ```
+7. Copy the example `setup.sh.example` to `setup.sh` and replace the placeholder `YOUR-KEY` with the values from the [WordPress Secret Key Generator](https://api.wordpress.org/secret-key/1.1/salt/). Make sure to `chomd +x` the file, and then run it and pass in the name of your app: `./setup.sh mywordpress`. This will set these values as environmental values in the cloud.gov environment. Note - Make sure to include the leading and closing `'` characters to avoid errors escaping special characters.
 
 8. Push it to CloudFoundry.
 
