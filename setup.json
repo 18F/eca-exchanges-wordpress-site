@@ -1,0 +1,26 @@
+{
+    "site_info": {
+        "url": "https://eca-exchanges-wordpress.app.cloud.gov",
+        "title": "ECA Exchanges",
+        "admin_user": "admin",
+        "admin_password": "",
+        "admin_email": ""
+    },
+    "plugins": [
+        {
+          "url": "https://github.com/humanmade/S3-Uploads/archive/v1.1.0.zip"
+        },
+        {
+          "name": "akismet",
+          "version": "4.0"
+        },
+        {
+          "name": "custom-post-type-ui",
+          "version": "1.11.2"
+        },
+        {
+          "name": "advanced-custom-fields"
+        }
+    ],
+    "themes": []
+}
