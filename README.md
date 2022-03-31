@@ -1,4 +1,37 @@
-## cloud.gov PHP Example Application:  WordPress
+## ECA Exchanges - Prototype WordPress Site
+
+This repository contains the code needed to build a working WordPress site on Cloud.gov (using CloudFoundry). Though ECA may not use Cloud.gov, the assets in this repo are still usable on a WordPres site.
+
+The files here tell CloudFoundry to:
+1. Download WordPress onto the server
+2. Add the files of this repo to the appropriate directories of the site
+3. Install and configure WordPress (or update WordPress)
+4. Swap out the old container and add in this revised container.
+
+**Plugins**
+
+The plugins it tries to install:
+* S3 Uploads (to allow file uploads to exist outside of the PHP container)
+* Akismet (the anti-comment-spam plugin)
+* Custom Post Type UI (which lets you build a custom post type through their interface and get code from it)
+* Advanced Custom Fields (which lets you add in required and optional fields to a post type)
+
+Using Custom Post Type UI and Advanced Custom Fields, you can build pages like the Programs page that 18F demoed where you can attach extra information to a program, then use WordPress's API to access them later.
+
+Within the `wp-content/plugins/` there's a plugin for the PASC Content Types. This is an example plugin for adding the custom types. Adding in shortcodes or Gutenburg blocks can also go in here to help reuse data from programs, events, or other types of data.
+
+**Themes**
+
+The setup script doens't install a theme. Instead, the files are provided in the `wp-content/themes` directory. The theme used here is [The Standards](https://github.com/Crossfxn/The-Standards), which is based on the [US Web Design System](https://designsystem.digital.gov/). Two files have been added, `archive-programs.php` and `single-programs.php`. These will show single programs as well as a list of programs. They don't have much customization but mostly enable WP to find the custom Program type and show a placeholder for it.
+
+---
+
+Below this is the original README from the cloud.gov deployment pack for WordPress. We're leaving it intact in case you're curious how it works.
+
+---
+
+
+
 
 This is an example application which can be run on cloud.gov using the CloudFoundry [PHP buildpack](http://docs.cloudfoundry.org/buildpacks/php/index.html).
 
